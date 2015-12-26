@@ -57,7 +57,6 @@ repositories
 dependencies
 {
 	compile 'com.google.android.gms:play-services:8.3.0'
-	compile 'id.web.tanudjaja.android:libatnet-http:1.0.0'
 	compile 'id.web.tanudjaja.android:libtanudjaja-android-common:1.0.2'
 	testCompile 'junit:junit:4.12'
 }
