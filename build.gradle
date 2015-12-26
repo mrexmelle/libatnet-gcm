@@ -1,0 +1,125 @@
+
+final String mgLibRepo=System.getenv("MG_LIB_REPO")
+
+buildscript
+{
+	repositories
+	{
+		mavenCentral()
+	}
+
+	dependencies
+	{
+		classpath 'com.android.tools.build:gradle:1.5.0'
+	}
+}
+
+apply plugin: 'com.android.library'
+
+archivesBaseName='libatnet-gcm'
+version='1.0.0'
+
+android
+{
+	compileSdkVersion 22
+	buildToolsVersion "22.0.1"
+
+	libraryVariants.all
+	{
+		variant ->
+			variant.outputs.each
+			{
+				output ->
+        				File outputFile = output.outputFile
+        				if (outputFile != null && outputFile.name.endsWith('.aar'))
+					{
+	            				String fileName = "${archivesBaseName}-${version}.aar"
+	            				output.outputFile = new File(outputFile.parent, fileName)
+					}
+			}
+	}
+
+	android
+	{
+		lintOptions
+		{
+			abortOnError false
+		}
+	}
+}
+
+repositories
+{
+	mavenCentral()
+	mavenLocal()
+}
+
+dependencies
+{
+	compile 'com.google.android.gms:play-services:8.3.0'
+	compile 'id.web.tanudjaja.android:libatnet-http:1.0.0'
+	compile 'id.web.tanudjaja.android:libtanudjaja-android-common:1.0.2'
+	testCompile 'junit:junit:4.12'
+}
+
+build.doLast
+{
+	copy
+	{
+		from('build/intermediates/bundles/release')
+		into('build/libs')
+		include('classes.jar')
+		rename('classes.jar', "${archivesBaseName}-${version}.jar")
+	}
+
+	delete 'build/outputs/aar'
+}
+
+task(install, dependsOn: build) <<
+{
+	final String output='build/libs/' + archivesBaseName + '-' + version + '.jar'
+	File f = file(output)
+	if(f.exists())
+	{
+		copy
+		{
+			from output
+			into mgLibRepo
+		}
+		println 'Installation success.'
+	}
+	else
+	{
+		println 'Installation failed. File ' + output + ' not found.'
+	}
+}
+
+configure(install)
+{
+	group = 'Install'
+	description = 'Installs the jar to ' + mgLibRepo
+}
+
+task(uninstall) <<
+{
+	final String installedFile=mgLibRepo + '/' + archivesBaseName + '-' + version + '.jar'
+	delete installedFile
+}
+
+configure(uninstall)
+{
+	group = 'Install'
+	description = 'Removes the installed jar from ' + mgLibRepo
+}
+
+task (distclean, dependsOn: clean) <<
+{
+	delete ".gradle"
+}
+
+configure(distclean)
+{
+	group = 'Build'
+	description = 'Clean the build result and the .gradle directory'
+}
+
